@@ -1,0 +1,249 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>建造者模式 | Fight-Qing</title><meta name="author" content="smin"><meta name="copyright" content="smin"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="定义：将一个复杂对象的构建与其表示分离，使得同样的构建过程可以创建不同的表示 使用场景：  1、需要生成的对象具有复杂的内部结构。  2、需要生成的对象内部属性本身相互依赖。 建造者模式在创建复杂对象时非常有用，特别是当对象的构建过程涉及多个步骤或参数时。它可以提供更好的灵活性和可维护性，同时使得代码更加清晰可读。 注意事项：与工厂模式的区别是：建造者模式更加关注与零件装配的顺序。 传统Build">
+<meta property="og:type" content="article">
+<meta property="og:title" content="建造者模式">
+<meta property="og:url" content="http://example.com/2023/09/12/%E5%BB%BA%E9%80%A0%E8%80%85%E6%A8%A1%E5%BC%8F/index.html">
+<meta property="og:site_name" content="Fight-Qing">
+<meta property="og:description" content="定义：将一个复杂对象的构建与其表示分离，使得同样的构建过程可以创建不同的表示 使用场景：  1、需要生成的对象具有复杂的内部结构。  2、需要生成的对象内部属性本身相互依赖。 建造者模式在创建复杂对象时非常有用，特别是当对象的构建过程涉及多个步骤或参数时。它可以提供更好的灵活性和可维护性，同时使得代码更加清晰可读。 注意事项：与工厂模式的区别是：建造者模式更加关注与零件装配的顺序。 传统Build">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/20230717002706.png">
+<meta property="article:published_time" content="2023-09-11T16:45:48.000Z">
+<meta property="article:modified_time" content="2023-09-11T16:54:19.166Z">
+<meta property="article:author" content="smin">
+<meta property="article:tag" content="设计模式">
+<meta property="article:tag" content="创造型">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/20230717002706.png"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://example.com/2023/09/12/%E5%BB%BA%E9%80%A0%E8%80%85%E6%A8%A1%E5%BC%8F/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: true,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '建造者模式',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2023-09-12 00:54:19'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/20230717002706.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">11</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">13</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">4</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/index_img.jpg')"><nav id="nav"><span id="blog-info"><a href="/" title="Fight-Qing"><span class="site-name">Fight-Qing</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">建造者模式</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-09-11T16:45:48.000Z" title="发表于 2023-09-12 00:45:48">2023-09-12</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2023-09-11T16:54:19.166Z" title="更新于 2023-09-12 00:54:19">2023-09-12</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">设计模式</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="建造者模式"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><p><strong>定义：</strong>将一个复杂对象的构建与其表示分离，使得同样的构建过程可以创建不同的表示</p>
+<p><strong>使用场景：</strong> </p>
+<p>1、需要生成的对象具有复杂的内部结构。 </p>
+<p>2、需要生成的对象内部属性本身相互依赖。</p>
+<p>建造者模式在创建复杂对象时非常有用，特别是当对象的构建过程涉及多个步骤或参数时。它可以提供更好的灵活性和可维护性，同时使得代码更加清晰可读。</p>
+<p><strong>注意事项：</strong>与工厂模式的区别是：建造者模式更加关注与零件装配的顺序。</p>
+<h2 id="传统Builder-模式"><a href="#传统Builder-模式" class="headerlink" title="传统Builder 模式"></a>传统Builder 模式</h2><p><strong>角色：</strong></p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/20230912005355.png" alt="image-20230912005355626"></p>
+<p><strong>Product（产品角色）：</strong> 一个具体的产品对象。</p>
+<p><strong>Builder（抽象建造者）：</strong> 创建一个Product对象的各个部件指定的抽象接口。</p>
+<p><strong>ConcreteBuilder（具体建造者）：</strong> 实现抽象接口，构建和装配各个部件。</p>
+<p><strong>Director（指挥者）：</strong> 构建一个使用Builder接口的对象。它主要是用于创建一个复杂的对象。它主要有两个作用，一是：隔离了客户与对象的生产过程，二是：负责控制产品对象的生产过程。</p>
+<p> 拿KFC两个套餐举例</p>
+<p> 套餐A:汉堡，薯条，大鸡腿<br> 套餐B:汉堡，薯条，小鸡腿，小可乐，小披萨</p>
+<p> 其中薯条和汉堡可大可小，并且必须有，<br> 其它的都为固定大小，但是你可以选择有或没有</p>
+<ul>
+<li>Product</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">KFC</span> &#123;</span><br><span class="line">    <span class="comment">//套餐必点</span></span><br><span class="line">    <span class="keyword">private</span> String hamburger;</span><br><span class="line">    <span class="keyword">private</span> String chips;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//套餐选点</span></span><br><span class="line">    <span class="keyword">private</span> String chicken;</span><br><span class="line">    <span class="keyword">private</span> String cola;</span><br><span class="line">    <span class="keyword">private</span> String pizza;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//必点</span></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">KFC</span><span class="params">(String hamburger,String chips)</span>&#123;</span><br><span class="line">        <span class="built_in">this</span>.hamburger = hamburger;</span><br><span class="line">        <span class="built_in">this</span>.chips = chips;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//set方法</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setChicken</span><span class="params">(String chicken)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.chicken = chicken;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setCola</span><span class="params">(String cola)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.cola = cola;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setPizza</span><span class="params">(String pizza)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.pizza = pizza;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> String <span class="title function_">toString</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;KFC&#123;&quot;</span> +</span><br><span class="line">                <span class="string">&quot;hamburger=&#x27;&quot;</span> + hamburger + <span class="string">&#x27;\&#x27;&#x27;</span> +</span><br><span class="line">                <span class="string">&quot;, chips=&#x27;&quot;</span> + chips + <span class="string">&#x27;\&#x27;&#x27;</span> +</span><br><span class="line">                <span class="string">&quot;, chicken=&#x27;&quot;</span> + chicken + <span class="string">&#x27;\&#x27;&#x27;</span> +</span><br><span class="line">                <span class="string">&quot;, cola=&#x27;&quot;</span> + cola + <span class="string">&#x27;\&#x27;&#x27;</span> +</span><br><span class="line">                <span class="string">&quot;, pizza=&#x27;&quot;</span> + pizza + <span class="string">&#x27;\&#x27;&#x27;</span> +</span><br><span class="line">                <span class="string">&#x27;&#125;&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>Builder</li>
+</ul>
+<p>定义一个接口，表明需要建造什么，得到什么</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">Builder</span> &#123;</span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">setChicken</span><span class="params">()</span>;</span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">setCola</span><span class="params">()</span>;</span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">setPizza</span><span class="params">()</span>;</span><br><span class="line"></span><br><span class="line">    KFC <span class="title function_">getKFC</span><span class="params">()</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>ConcreteBuilder:</li>
+</ul>
+<p>此时应该注意，这个时候还没有生产套餐，只是定义套餐</p>
+<p>套餐A</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ConcreteBuilder1</span> <span class="keyword">implements</span> <span class="title class_">Builder</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> KFC kfc;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">ConcreteBuilder1</span><span class="params">(String hamburger,String chips)</span>&#123;</span><br><span class="line">        kfc=<span class="keyword">new</span> <span class="title class_">KFC</span>(hamburger,chips);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setChicken</span><span class="params">()</span> &#123;</span><br><span class="line">        kfc.setChicken(<span class="string">&quot;大鸡腿&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setCola</span><span class="params">()</span> &#123;</span><br><span class="line">        kfc.setCola(<span class="literal">null</span>);</span><br><span class="line">        System.out.println(<span class="string">&quot;套餐A里面没有可乐&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setPizza</span><span class="params">()</span> &#123;</span><br><span class="line">        kfc.setPizza(<span class="literal">null</span>);</span><br><span class="line">        System.out.println(<span class="string">&quot;套餐A里面没有披萨&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> KFC <span class="title function_">getKFC</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>.kfc;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>套餐B</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ConcreteBuilder2</span> <span class="keyword">implements</span> <span class="title class_">Builder</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> KFC kfc;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">ConcreteBuilder2</span><span class="params">(String hamburger, String chips)</span>&#123;</span><br><span class="line">        kfc=<span class="keyword">new</span> <span class="title class_">KFC</span>(hamburger,chips);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setChicken</span><span class="params">()</span> &#123;</span><br><span class="line">        kfc.setChicken(<span class="string">&quot;小鸡腿&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setCola</span><span class="params">()</span> &#123;</span><br><span class="line">        kfc.setCola(<span class="string">&quot;小可乐&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setPizza</span><span class="params">()</span> &#123;</span><br><span class="line">        kfc.setPizza(<span class="string">&quot;小披萨&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> KFC <span class="title function_">getKFC</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>.kfc;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>Director:</li>
+</ul>
+<p>真正的执行者，这里把他当作服务员，此时你像服务员点餐</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Director</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> KFC <span class="title function_">build</span><span class="params">(Builder builder)</span>&#123;</span><br><span class="line">        builder.setPizza();</span><br><span class="line">        builder.setChicken();</span><br><span class="line">        builder.setCola();</span><br><span class="line">        <span class="keyword">return</span> builder.getKFC();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>测试</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">BuilderTest</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;======套餐A======&quot;</span>);</span><br><span class="line">        <span class="type">Builder</span> <span class="variable">builder1</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ConcreteBuilder1</span>(<span class="string">&quot;大汉堡&quot;</span>, <span class="string">&quot;小薯条&quot;</span>);</span><br><span class="line">        <span class="type">KFC</span> <span class="variable">kfc1</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Director</span>().build(builder1);</span><br><span class="line">        System.out.println(kfc1);</span><br><span class="line">        System.out.println(<span class="string">&quot;======套餐B======&quot;</span>);</span><br><span class="line">        <span class="type">Builder</span> <span class="variable">builder2</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ConcreteBuilder2</span>(<span class="string">&quot;大汉堡&quot;</span>, <span class="string">&quot;小薯条&quot;</span>);</span><br><span class="line">        KFC kfc2=<span class="keyword">new</span> <span class="title class_">Director</span>().build(builder2);</span><br><span class="line">        System.out.println(kfc2);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//======套餐A======</span></span><br><span class="line"><span class="comment">//        套餐A里面没有披萨</span></span><br><span class="line"><span class="comment">//        套餐A里面没有可乐</span></span><br><span class="line"><span class="comment">//        KFC&#123;hamburger=&#x27;大汉堡&#x27;, chips=&#x27;小薯条&#x27;, chicken=&#x27;大鸡腿&#x27;, cola=&#x27;null&#x27;, pizza=&#x27;null&#x27;&#125;</span></span><br><span class="line"><span class="comment">//        ======套餐B======</span></span><br><span class="line"><span class="comment">//        KFC&#123;hamburger=&#x27;大汉堡&#x27;, chips=&#x27;小薯条&#x27;, chicken=&#x27;小鸡腿&#x27;, cola=&#x27;小可乐&#x27;, pizza=&#x27;小披萨&#x27;&#125;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="简化版的建造者模式"><a href="#简化版的建造者模式" class="headerlink" title="简化版的建造者模式"></a>简化版的建造者模式</h2><h3 id="采用链式编程的方式"><a href="#采用链式编程的方式" class="headerlink" title="采用链式编程的方式"></a><strong>采用链式编程的方式</strong></h3><p>这种模式更加灵活，更加符合定义</p>
+<p>既然Director是变化的，并且其实在生活中我们自己本身就是Director,所以这个时候我们可以把Director这个角色去掉，因为我们自身就是指导者。</p>
+<ul>
+<li>Product</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">KFC</span> &#123;</span><br><span class="line">    <span class="comment">//套餐必点</span></span><br><span class="line">    <span class="keyword">private</span> String hamburger;</span><br><span class="line">    <span class="keyword">private</span> String chips;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//套餐选点</span></span><br><span class="line">    <span class="keyword">private</span> String chicken;</span><br><span class="line">    <span class="keyword">private</span> String cola;</span><br><span class="line">    <span class="keyword">private</span> String pizza;</span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">KFC</span><span class="params">(String hamburger,String chips)</span>&#123;</span><br><span class="line">        <span class="built_in">this</span>.hamburger = hamburger;</span><br><span class="line">        <span class="built_in">this</span>.hamburger = chips;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setChicken</span><span class="params">(String chicken)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.chicken = chicken;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setCola</span><span class="params">(String cola)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.cola = cola;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setPizza</span><span class="params">(String pizza)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.pizza = pizza;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>抽象建造者（Builder）</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">class</span> <span class="title class_">Builder</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">abstract</span> Builder <span class="title function_">setChicken</span><span class="params">()</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">abstract</span> Builder <span class="title function_">setCola</span><span class="params">()</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">abstract</span> Builder <span class="title function_">setPizza</span><span class="params">()</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">abstract</span> KFC <span class="title function_">getKFC</span><span class="params">()</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>具体建造者(ConcreteBuilder)</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ConcreteBuilder</span> <span class="keyword">extends</span> <span class="title class_">Builder</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> KFC kfc;</span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">ConcreteBuilder</span><span class="params">(String hamburger,String chips)</span>&#123;</span><br><span class="line">        kfc = <span class="keyword">new</span> <span class="title class_">KFC</span>(hamburger,chips);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> Builder <span class="title function_">setChicken</span><span class="params">()</span> &#123;</span><br><span class="line">        kfc.setChicken(<span class="string">&quot;鸡腿&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> Builder <span class="title function_">setCola</span><span class="params">()</span> &#123;</span><br><span class="line">        kfc.setChicken(<span class="string">&quot;可乐&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> Builder <span class="title function_">setPizza</span><span class="params">()</span> &#123;</span><br><span class="line">        kfc.setChicken(<span class="string">&quot;披萨&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> KFC <span class="title function_">getKFC</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> kfc;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>测试</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">BTest</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">       <span class="type">KFC</span> <span class="variable">kfc</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ConcreteBuilder</span>(<span class="string">&quot;汉堡&quot;</span>,<span class="string">&quot;薯条&quot;</span>).setChicken().setCola().getKFC();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果不需要抽象建造者的角色来规定生产内容，那么代码到这里其实还有进一步的简化空间。</p>
+<h3 id="使用静态内部类的方式"><a href="#使用静态内部类的方式" class="headerlink" title="使用静态内部类的方式"></a><strong>使用静态内部类的方式</strong></h3><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">KFC</span> &#123;</span><br><span class="line">    <span class="comment">//套餐必点</span></span><br><span class="line">    <span class="keyword">private</span> String hamburger;</span><br><span class="line">    <span class="keyword">private</span> String chips;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//套餐选点</span></span><br><span class="line">    <span class="keyword">private</span> String chicken;</span><br><span class="line">    <span class="keyword">private</span> String cola;</span><br><span class="line">    <span class="keyword">private</span> String pizza;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//一定要有一个带有Builder参数的建造者</span></span><br><span class="line">    <span class="keyword">private</span> <span class="title function_">KFC</span><span class="params">(Builder builder)</span>&#123;</span><br><span class="line">        <span class="built_in">this</span>.hamburger = builder.hamburger;</span><br><span class="line">        <span class="built_in">this</span>.chips = builder.chips;</span><br><span class="line">        <span class="built_in">this</span>.chicken = builder.chicken;</span><br><span class="line">        <span class="built_in">this</span>.cola = builder.cola;</span><br><span class="line">        <span class="built_in">this</span>.pizza = builder.pizza;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> String <span class="title function_">toString</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;KFC&#123;&quot;</span> +</span><br><span class="line">                <span class="string">&quot;hamburger=&#x27;&quot;</span> + hamburger + <span class="string">&#x27;\&#x27;&#x27;</span> +</span><br><span class="line">                <span class="string">&quot;, chips=&#x27;&quot;</span> + chips + <span class="string">&#x27;\&#x27;&#x27;</span> +</span><br><span class="line">                <span class="string">&quot;, chicken=&#x27;&quot;</span> + chicken + <span class="string">&#x27;\&#x27;&#x27;</span> +</span><br><span class="line">                <span class="string">&quot;, cola=&#x27;&quot;</span> + cola + <span class="string">&#x27;\&#x27;&#x27;</span> +</span><br><span class="line">                <span class="string">&quot;, pizza=&#x27;&quot;</span> + pizza + <span class="string">&#x27;\&#x27;&#x27;</span> +</span><br><span class="line">                <span class="string">&#x27;&#125;&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">Builder</span>&#123;</span><br><span class="line">        <span class="comment">//套餐必点</span></span><br><span class="line">        <span class="keyword">private</span> String hamburger;</span><br><span class="line">        <span class="keyword">private</span> String chips;</span><br><span class="line"></span><br><span class="line">        <span class="comment">//套餐选点</span></span><br><span class="line">        <span class="keyword">private</span> String chicken;</span><br><span class="line">        <span class="keyword">private</span> String cola;</span><br><span class="line">        <span class="keyword">private</span> String pizza;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">public</span> <span class="title function_">Builder</span><span class="params">(String hamburger,String chips)</span>&#123;</span><br><span class="line">            <span class="built_in">this</span>.hamburger = hamburger;</span><br><span class="line">            <span class="built_in">this</span>.chips = chips;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">public</span> Builder <span class="title function_">setChicken</span><span class="params">()</span>&#123;</span><br><span class="line">            <span class="built_in">this</span>.chicken = <span class="string">&quot;小鸡腿&quot;</span>;</span><br><span class="line">            <span class="keyword">return</span> <span class="built_in">this</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">public</span> Builder <span class="title function_">setCola</span><span class="params">()</span>&#123;</span><br><span class="line">            <span class="built_in">this</span>.cola = <span class="string">&quot;小可乐&quot;</span>;</span><br><span class="line">            <span class="keyword">return</span> <span class="built_in">this</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">public</span> Builder <span class="title function_">setPizza</span><span class="params">()</span>&#123;</span><br><span class="line">            <span class="built_in">this</span>.pizza = <span class="string">&quot;小披萨&quot;</span>;</span><br><span class="line">            <span class="keyword">return</span> <span class="built_in">this</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">//生成一个产品</span></span><br><span class="line">        <span class="keyword">public</span> KFC <span class="title function_">getKFC</span><span class="params">()</span>&#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">KFC</span>(<span class="built_in">this</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="建造者模式和抽象工厂模式的区别"><a href="#建造者模式和抽象工厂模式的区别" class="headerlink" title="建造者模式和抽象工厂模式的区别"></a>建造者模式和抽象工厂模式的区别</h2><p>通过上面的代码，你发现普通的建造者模式和抽象工厂模式真的很像，在建造者模式中的builder角色很像超级工厂，然后contracterBuilder很像具体的工厂，都是规定了建造的内容</p>
+<p>那么它们之间 有什么区别呢</p>
+<ul>
+<li>建造者模式有指导者这个角色，直接返回一个组装好的产品，而抽象工厂模式返回一系列相关的产品，这些产品位于不同的产品等级结构，构成了一个产品族</li>
+<li>建造者模式更适合复杂的产品构建</li>
+<li>可以将抽象工厂模式理解成汽车零件生产工厂，而建造者模式看出组装工厂</li>
+</ul>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="http://example.com">smin</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="http://example.com/2023/09/12/%E5%BB%BA%E9%80%A0%E8%80%85%E6%A8%A1%E5%BC%8F/">http://example.com/2023/09/12/%E5%BB%BA%E9%80%A0%E8%80%85%E6%A8%A1%E5%BC%8F/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://example.com" target="_blank">Fight-Qing</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">设计模式</a><a class="post-meta__tags" href="/tags/%E5%88%9B%E9%80%A0%E5%9E%8B/">创造型</a></div><div class="post_share"><div class="social-share" data-image="https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/20230717002706.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2023/09/12/%E5%8E%9F%E5%9E%8B%E6%A8%A1%E5%BC%8F/" title="原型模式"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">原型模式</div></div></a></div><div class="next-post pull-right"><a href="/2023/09/12/%E5%8D%95%E4%BE%8B%E6%A8%A1%E5%BC%8F/" title="单例模式"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">单例模式</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><div><a href="/2023/09/12/%E5%8D%95%E4%BE%8B%E6%A8%A1%E5%BC%8F/" title="单例模式"><div class="cover" style="background: var(--default-bg-color)"></div><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-09-12</div><div class="title">单例模式</div></div></a></div><div><a href="/2023/09/12/%E5%8E%9F%E5%9E%8B%E6%A8%A1%E5%BC%8F/" title="原型模式"><div class="cover" style="background: var(--default-bg-color)"></div><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-09-12</div><div class="title">原型模式</div></div></a></div><div><a href="/2023/09/12/%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F/" title="工厂模式"><div class="cover" style="background: var(--default-bg-color)"></div><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-09-12</div><div class="title">工厂模式</div></div></a></div><div><a href="/2023/09/12/%E6%A8%A1%E6%9D%BF%E6%A8%A1%E5%BC%8F/" title="模板模式"><div class="cover" style="background: var(--default-bg-color)"></div><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-09-12</div><div class="title">模板模式</div></div></a></div><div><a href="/2023/09/12/%E9%97%A8%E9%9D%A2%EF%BC%88%E5%A4%96%E8%A7%82%EF%BC%89%E6%A8%A1%E5%BC%8F/" title="门面（外观）模式"><div class="cover" style="background: var(--default-bg-color)"></div><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-09-12</div><div class="title">门面（外观）模式</div></div></a></div><div><a href="/2023/09/12/%E9%80%82%E9%85%8D%E5%99%A8%E6%A8%A1%E5%BC%8F/" title="适配器模式"><div class="cover" style="background: var(--default-bg-color)"></div><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-09-12</div><div class="title">适配器模式</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content is-expand"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BC%A0%E7%BB%9FBuilder-%E6%A8%A1%E5%BC%8F"><span class="toc-number">1.</span> <span class="toc-text">传统Builder 模式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AE%80%E5%8C%96%E7%89%88%E7%9A%84%E5%BB%BA%E9%80%A0%E8%80%85%E6%A8%A1%E5%BC%8F"><span class="toc-number">2.</span> <span class="toc-text">简化版的建造者模式</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%87%87%E7%94%A8%E9%93%BE%E5%BC%8F%E7%BC%96%E7%A8%8B%E7%9A%84%E6%96%B9%E5%BC%8F"><span class="toc-number">2.1.</span> <span class="toc-text">采用链式编程的方式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E9%9D%99%E6%80%81%E5%86%85%E9%83%A8%E7%B1%BB%E7%9A%84%E6%96%B9%E5%BC%8F"><span class="toc-number">2.2.</span> <span class="toc-text">使用静态内部类的方式</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BB%BA%E9%80%A0%E8%80%85%E6%A8%A1%E5%BC%8F%E5%92%8C%E6%8A%BD%E8%B1%A1%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="toc-number">3.</span> <span class="toc-text">建造者模式和抽象工厂模式的区别</span></a></li></ol></div></div></div></div></main><footer id="footer" style="background-image: url('https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/index_img.jpg')"><div id="footer-wrap"><div class="copyright">&copy;2023 By smin</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script defer="defer" id="fluttering_ribbon" mobile="true" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-fluttering-ribbon.min.js"></script><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/activate-power-mode.min.js"></script><script>POWERMODE.colorful = true;
+POWERMODE.shake = true;
+POWERMODE.mobile = false;
+document.body.addEventListener('input', POWERMODE);
+</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div></body></html>
