@@ -1,0 +1,281 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Spring IOC源码分析（二）–BeanFactory和ApplicationContext容器家族 | Fight-Qing</title><meta name="author" content="smin"><meta name="copyright" content="smin"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="Spring IOC源码分析（二）–BeanFactory和ApplicationContext容器家族 本文分析的源码版本：spring-framework : 5.2.0.RELEASE 官方参考文档：Spring Framework Documentation  BeanFactory：Spring容器的基石，顶级容器接口在上一个文章中，我们提到过，在Spring官方文档中，称org.spr">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring IOC源码分析（二）–BeanFactory和ApplicationContext容器家族">
+<meta property="og:url" content="http://example.com/2023/09/23/Spring-IOC%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%EF%BC%88%E4%BA%8C%EF%BC%89%E2%80%93BeanFactory%E5%92%8CApplicationContext%E5%AE%B9%E5%99%A8%E5%AE%B6%E6%97%8F/index.html">
+<meta property="og:site_name" content="Fight-Qing">
+<meta property="og:description" content="Spring IOC源码分析（二）–BeanFactory和ApplicationContext容器家族 本文分析的源码版本：spring-framework : 5.2.0.RELEASE 官方参考文档：Spring Framework Documentation  BeanFactory：Spring容器的基石，顶级容器接口在上一个文章中，我们提到过，在Spring官方文档中，称org.spr">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/20230717002706.png">
+<meta property="article:published_time" content="2023-09-23T10:52:59.000Z">
+<meta property="article:modified_time" content="2023-09-23T10:54:06.049Z">
+<meta property="article:author" content="smin">
+<meta property="article:tag" content="Spring">
+<meta property="article:tag" content="框架">
+<meta property="article:tag" content="源码分析">
+<meta property="article:tag" content="IOC">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/20230717002706.png"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://example.com/2023/09/23/Spring-IOC%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%EF%BC%88%E4%BA%8C%EF%BC%89%E2%80%93BeanFactory%E5%92%8CApplicationContext%E5%AE%B9%E5%99%A8%E5%AE%B6%E6%97%8F/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: true,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Spring IOC源码分析（二）–BeanFactory和ApplicationContext容器家族',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2023-09-23 18:54:06'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/20230717002706.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">13</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">17</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">7</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/index_img.jpg')"><nav id="nav"><span id="blog-info"><a href="/" title="Fight-Qing"><span class="site-name">Fight-Qing</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">Spring IOC源码分析（二）–BeanFactory和ApplicationContext容器家族</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-09-23T10:52:59.000Z" title="发表于 2023-09-23 18:52:59">2023-09-23</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2023-09-23T10:54:06.049Z" title="更新于 2023-09-23 18:54:06">2023-09-23</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/">源码分析</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/%E6%A1%86%E6%9E%B6/">框架</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/%E6%A1%86%E6%9E%B6/spring/">spring</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="Spring IOC源码分析（二）–BeanFactory和ApplicationContext容器家族"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h1 id="Spring-IOC源码分析（二）–BeanFactory和ApplicationContext容器家族"><a href="#Spring-IOC源码分析（二）–BeanFactory和ApplicationContext容器家族" class="headerlink" title="Spring IOC源码分析（二）–BeanFactory和ApplicationContext容器家族"></a>Spring IOC源码分析（二）–BeanFactory和ApplicationContext容器家族</h1><ul>
+<li>本文分析的源码版本：<code>spring-framework : 5.2.0.RELEASE</code></li>
+<li>官方参考文档：<a target="_blank" rel="noopener" href="https://docs.spring.io/spring/docs/5.2.0.RELEASE/spring-framework-reference/">Spring Framework Documentation</a></li>
+</ul>
+<h2 id="BeanFactory：Spring容器的基石，顶级容器接口"><a href="#BeanFactory：Spring容器的基石，顶级容器接口" class="headerlink" title="BeanFactory：Spring容器的基石，顶级容器接口"></a>BeanFactory：Spring容器的基石，顶级容器接口</h2><p>在上一个文章中，我们提到过，在Spring官方文档中，称org.springframework.context.ApplicationContext这个接口就代表了Spring的容器，在解释ApplicationContext之前，必须要先介绍Spring容器的基石，<code>BeanFactory</code>接口。<code>ApplicationContext</code>就是继承了<code>BeanFactory</code>接口的一种高级容器接口。而<code>BeanFactory</code>是简单容器的代表，是Spring容器家族的基石，所有的容器都必须实现这个接口。</p>
+<p>首先，先看一下<code>BeanFactory</code>接口的源码。</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> org.springframework.beans.factory;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">BeanFactory</span> &#123;</span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * 对FactoryBean的转移定义，提供获取FactoryBean实例的方法。</span></span><br><span class="line"><span class="comment">	 * 如果定义bean时是通过工厂模式配置Bean的，那么通过bean的名字检索FactoryBean时</span></span><br><span class="line"><span class="comment">	 * 得到的会是FactoryBean生产出来的实例，如果想得到工厂本身，需要加&amp;进行转义</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="type">String</span> <span class="variable">FACTORY_BEAN_PREFIX</span> <span class="operator">=</span> <span class="string">&quot;&amp;&quot;</span>;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * 不同的获取Bean的方法</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	Object <span class="title function_">getBean</span><span class="params">(String name)</span> <span class="keyword">throws</span> BeansException;</span><br><span class="line">	&lt;T&gt; T <span class="title function_">getBean</span><span class="params">(String name, Class&lt;T&gt; requiredType)</span> <span class="keyword">throws</span> BeansException;</span><br><span class="line">	Object <span class="title function_">getBean</span><span class="params">(String name, Object... args)</span> <span class="keyword">throws</span> BeansException;</span><br><span class="line">	&lt;T&gt; T <span class="title function_">getBean</span><span class="params">(Class&lt;T&gt; requiredType)</span> <span class="keyword">throws</span> BeansException;</span><br><span class="line">	&lt;T&gt; T <span class="title function_">getBean</span><span class="params">(Class&lt;T&gt; requiredType, Object... args)</span> <span class="keyword">throws</span> BeansException;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * 获取Bean的提供者（工厂）</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	&lt;T&gt; ObjectProvider&lt;T&gt; <span class="title function_">getBeanProvider</span><span class="params">(Class&lt;T&gt; requiredType)</span>;</span><br><span class="line">	&lt;T&gt; ObjectProvider&lt;T&gt; <span class="title function_">getBeanProvider</span><span class="params">(ResolvableType requiredType)</span>;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">// 检索是否包含指定名字的bean</span></span><br><span class="line">	<span class="type">boolean</span> <span class="title function_">containsBean</span><span class="params">(String name)</span>;</span><br><span class="line">	<span class="comment">// 判断指定名字的bean是否为单例</span></span><br><span class="line">	<span class="type">boolean</span> <span class="title function_">isSingleton</span><span class="params">(String name)</span> <span class="keyword">throws</span> NoSuchBeanDefinitionException;</span><br><span class="line">	<span class="comment">// 判断指定名字的bean是否为原型</span></span><br><span class="line">	<span class="type">boolean</span> <span class="title function_">isPrototype</span><span class="params">(String name)</span> <span class="keyword">throws</span> NoSuchBeanDefinitionException;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * 指定名字的Bean是否匹配指定的类型</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="type">boolean</span> <span class="title function_">isTypeMatch</span><span class="params">(String name, ResolvableType typeToMatch)</span> <span class="keyword">throws</span> NoSuchBeanDefinitionException;</span><br><span class="line">	<span class="type">boolean</span> <span class="title function_">isTypeMatch</span><span class="params">(String name, Class&lt;?&gt; typeToMatch)</span> <span class="keyword">throws</span> NoSuchBeanDefinitionException;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * 获取指定名字的Bean的类型</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="meta">@Nullable</span></span><br><span class="line">	Class&lt;?&gt; getType(String name) <span class="keyword">throws</span> NoSuchBeanDefinitionException;</span><br><span class="line">	<span class="meta">@Nullable</span></span><br><span class="line">	Class&lt;?&gt; getType(String name, <span class="type">boolean</span> allowFactoryBeanInit) <span class="keyword">throws</span> NoSuchBeanDefinitionException;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 获取指定名字Bean的所有别名</span></span><br><span class="line">	String[] getAliases(String name);</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>可以看出，<code>BeanFactory</code>接口的源码并不复杂，主要规定了一些容器的基本功能，其中有7个获取Bean或者Bean提供者的方法，5个判断型的方法，2个获取类型的方法，1个获取别名的方法。通过这些方法，可以看出BeanFactory是一个典型的工厂模式的工厂接口。</p>
+<p>在之前的文章中我们提到过：<strong>Spring框架的设计中，充满了通过上下继承关系来对基类进行功能扩充与功能分隔的类体系</strong>。 BeanFactory体系也是如此。</p>
+<p>下面看一下在顶级容器接口的下面，Spring又做了哪些骚操作吧：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/20230923171031.png" alt="image-20230923171031609"></p>
+<p>BeanFactory家族的核心成员主要就是上面的几个，其关系类图如图所示，BeanFactory位于家族顶层。这些接口和实现类，每一个都代表了对BeanFactory不同方向的功能扩展，下面逐一进行分析。</p>
+<h4 id="顶级二级接口：ListableBeanFactory和HierarchicalBeanFactroy。"><a href="#顶级二级接口：ListableBeanFactory和HierarchicalBeanFactroy。" class="headerlink" title="顶级二级接口：ListableBeanFactory和HierarchicalBeanFactroy。"></a>顶级二级接口：<code>ListableBeanFactory</code>和<code>HierarchicalBeanFactroy</code>。</h4><ul>
+<li><code>ListableBeanFactory</code>：该接口拥有列出工厂中所有Bean的能力。</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">ListableBeanFactory</span> <span class="keyword">extends</span> <span class="title class_">BeanFactory</span> &#123;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">// 检索是否包含给定beanName的BeanDefinition</span></span><br><span class="line">	<span class="type">boolean</span> <span class="title function_">containsBeanDefinition</span><span class="params">(String beanName)</span>;</span><br><span class="line">	<span class="comment">// 获取工厂中BeanDefinition的数量</span></span><br><span class="line">	<span class="type">int</span> <span class="title function_">getBeanDefinitionCount</span><span class="params">()</span>;</span><br><span class="line">	<span class="comment">// 获取工厂中所有BeanDefinition的Names</span></span><br><span class="line">	String[] getBeanDefinitionNames();</span><br><span class="line">	<span class="comment">// 获取指定类型的beanNames</span></span><br><span class="line">	String[] getBeanNamesForType(ResolvableType type);</span><br><span class="line">	String[] getBeanNamesForType(ResolvableType type, <span class="type">boolean</span> includeNonSingletons, <span class="type">boolean</span> allowEagerInit);</span><br><span class="line">	String[] getBeanNamesForType(<span class="meta">@Nullable</span> Class&lt;?&gt; type);</span><br><span class="line">	String[] getBeanNamesForType(<span class="meta">@Nullable</span> Class&lt;?&gt; type, <span class="type">boolean</span> includeNonSingletons, <span class="type">boolean</span> allowEagerInit);</span><br><span class="line">	<span class="comment">// 根据指定的类型来获取所有Bean</span></span><br><span class="line">	&lt;T&gt; Map&lt;String, T&gt; <span class="title function_">getBeansOfType</span><span class="params">(<span class="meta">@Nullable</span> Class&lt;T&gt; type)</span> <span class="keyword">throws</span> BeansException;</span><br><span class="line">	&lt;T&gt; Map&lt;String, T&gt; <span class="title function_">getBeansOfType</span><span class="params">(<span class="meta">@Nullable</span> Class&lt;T&gt; type, <span class="type">boolean</span> includeNonSingletons, <span class="type">boolean</span> allowEagerInit)</span></span><br><span class="line">			<span class="keyword">throws</span> BeansException;</span><br><span class="line">	<span class="comment">// 根据指定的直接获取beanNames</span></span><br><span class="line">	String[] getBeanNamesForAnnotation(Class&lt;? <span class="keyword">extends</span> <span class="title class_">Annotation</span>&gt; annotationType);</span><br><span class="line">	<span class="comment">// 获取所有指定注解标注的Bean实例，Autowired就是使用的该接口</span></span><br><span class="line">	Map&lt;String, Object&gt; <span class="title function_">getBeansWithAnnotation</span><span class="params">(Class&lt;? extends Annotation&gt; annotationType)</span> <span class="keyword">throws</span> BeansException;</span><br><span class="line">	<span class="comment">// 查找指定Bean中含有的注解类型</span></span><br><span class="line">	<span class="meta">@Nullable</span></span><br><span class="line">	&lt;A <span class="keyword">extends</span> <span class="title class_">Annotation</span>&gt; A <span class="title function_">findAnnotationOnBean</span><span class="params">(String beanName, Class&lt;A&gt; annotationType)</span></span><br><span class="line">			<span class="keyword">throws</span> NoSuchBeanDefinitionException;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看出ListableBeanFactory主要对外提供了<strong>批量</strong>获取Bean和BeanDefinition的方法，拓展类了BeanFactory的功能，是一个非常重要的接口。</p>
+<ul>
+<li><code>HierarchicalBeanFactroy</code>接口：顾名思义，这是一个分层的工厂。该接口实现了Bean工厂的分层。</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">HierarchicalBeanFactory</span> <span class="keyword">extends</span> <span class="title class_">BeanFactory</span> &#123;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * 返回父级工厂</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="meta">@Nullable</span></span><br><span class="line">	BeanFactory <span class="title function_">getParentBeanFactory</span><span class="params">()</span>;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * 检索本地工厂是否包含指定名字的Bean</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="type">boolean</span> <span class="title function_">containsLocalBean</span><span class="params">(String name)</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个接口非常简单，也是继承自BeanFactory，虽然简单，但却提供了一个非常重要的功能——<strong>工厂分层</strong>。工厂分层有什么用呢？通过工厂分层，SpringIoC容器可以建立父子层级关联的容器体系，子容器可以访问父容器中的Bean，而父容器不能访问子容器中的Bean。在容器内，Bean的id必须是唯一的，但子容器可以拥有一个和父容器id相同的Bean。</p>
+<p>父子容器层级体系增强了Spring容器架构的扩展性和灵活性，因为第三方可以通过编程的方式，为一个已经存在的容器添加一个或多个特殊用途的子容器，以提供一些额外的功能。</p>
+<p>Spring使用父子容器实现了很多功能，比如在Spring MVC中，展现层Bean位于一个子容器中，而业务层和持久层的Bean位于父容器中。这样，展现层Bean就可以引用业务层和持久层的Bean，而业务层和持久层的Bean则看不到展现层的Bean。</p>
+<h4 id="复杂配置的Bean工厂：ConfigurableBeanFactory接口"><a href="#复杂配置的Bean工厂：ConfigurableBeanFactory接口" class="headerlink" title="复杂配置的Bean工厂：ConfigurableBeanFactory接口"></a>复杂配置的Bean工厂：ConfigurableBeanFactory接口</h4><p><code>ConfigurableBeanFactory</code>接口是一个继承了<code>HierarchicalBeanFactroy</code>的子接口，同时该接口还继承了<code>SingletonBeanRegistry</code>接口，<code>SingletonBeanRegistry</code>是一个用来注册单例类的接口，提供了同意访问单例Bean的功能，该接口的方法如下图：</p>
+<img src="https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/20230923171418.png" alt="image-20230923171418528" style="zoom: 80%;" />
+
+<p>也就是说<code>ConfigurableBeanFactory</code>同时拥有了工厂分层和单例注册的功能，并且为了不辜负ConfigurableBeanFactory这个名字，该接口又继续扩展了几十个方法！加上继承来的方法，这个接口中的方法数量非常之多。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/20230923171442.png" alt="image-20230923171442904"></p>
+<p>该接口主要扩展了一些复杂的对单例Bean的配置与操作，虽然这个接口并没有被ApplicationContext高级容器体系所继承，但是一般的容器实现类都会继承或实现这个接口，目的是使用一种统一的方式对外暴露管理单例Bean的方式。</p>
+<h4 id="自动装配工厂：AutowireCapableBeanFactory接口"><a href="#自动装配工厂：AutowireCapableBeanFactory接口" class="headerlink" title="自动装配工厂：AutowireCapableBeanFactory接口"></a>自动装配工厂：<code>AutowireCapableBeanFactory</code>接口</h4><p>该接口直接继承自BeanFactory接口，扩展出了工厂的自动装配功能，其提供的方法如下：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/20230923171551.png" alt="image-20230923171550992"></p>
+<p>该接口主要作用是将自动装配的能力对外暴露出来，可以通过实现此接口实现自动装配能力，但是正常情况下不应该使用该接口。此接口主要针对框架之外，没有向Spring托管的Bean的应用。其中比较重要的知识是四种自动装配策略：</p>
+<pre><code>// 用于表示外部自动装配功能是否可用，但是不影响自动装配功能的使用
+int AUTOWIRE_NO = 0;
+// 标识 按名称自动装配
+int AUTOWIRE_BY_NAME = 1;
+// 标识 按类型自动装配 Autowired默认使用的该装配策略
+int AUTOWIRE_BY_TYPE = 2;
+// 标识 按照贪婪策略匹配到的最合适构造器来自动装配
+int AUTOWIRE_CONSTRUCTOR = 3;
+</code></pre>
+<h4 id="Bean工厂接口的集大成者：ConfigurableListableBeanFactory-接口"><a href="#Bean工厂接口的集大成者：ConfigurableListableBeanFactory-接口" class="headerlink" title="Bean工厂接口的集大成者：ConfigurableListableBeanFactory 接口"></a>Bean工厂接口的集大成者：<code>ConfigurableListableBeanFactory</code> 接口</h4><p>此工厂接口看类名即可知道，是一个继承了<code>ListableBeanFactory</code>和<code>ConfigurableBeanFactory</code>接口的子接口，同时它还继承了<code>AutowireCapableBeanFactory</code>接口，并且自身还扩展了一些功能，加在一起，这个接口的方法大概有接近100之巨。该接口总体上是继承多种父接口，并对功能进行略微扩展补充，包含了BeanFactory接口体系目前的所有方法，是Bean工厂接口的集大成者。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/20230923182521.png" alt="image-20230923182521376"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/20230923182535.png" alt="image-20230923182535352"></p>
+<h4 id="Bean工厂的抽象实现基类：AbstractBeanFactory抽象类"><a href="#Bean工厂的抽象实现基类：AbstractBeanFactory抽象类" class="headerlink" title="Bean工厂的抽象实现基类：AbstractBeanFactory抽象类"></a>Bean工厂的抽象实现基类：<code>AbstractBeanFactory</code>抽象类</h4><p><code>AbstractBeanFactory</code>这个抽象类是Spring容器体系中最重要的一个抽象类，该抽象类实现了BeanFactory重要的二级接口<code>ConfigurableBeanFactory</code>，实现了其中的绝大多数基本方法，实现了Bean工厂的许多重要功能，如对BeanDefinition、原型、单例Bean的各种操作。</p>
+<p>由于该抽象类实现方法繁多，逻辑复杂，若是详细分析贴出代码就容易陷入细节不能自拔，与本系列文章目的相悖，这里就不具体深入分析源码了，网上关于源码的详细分析也比较多，读者若是感兴趣，可以自行阅读与学习。</p>
+<p>这里需要多拓展一步，更加深入对<code>AbstractBeanFactory</code>的了解，从源码中我们可以发现，<code>AbstractBeanFactory</code>其实还继承了另外一个抽象类——<code>FactoryBeanRegistrySupport</code>：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/20230923182731.png" alt="image-20230923182731839"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/20230923182800.png" alt="image-20230923182800063"></p>
+<p>这个继承体系是Spring的AliasRegistry体系，也就是别名注册接口体系。</p>
+<p><code>AbstractBeanFactory</code>既然继承了这个体系，说明容器本身也是个别名注册器、FactroyBean注册器和单例Bean注册器，也会维护别名注册表、支持FactroyBean的注册和单例Bean注册的各种操作（注册、获取、移除、销毁等）。</p>
+<h4 id="第一个可以独立运行的容器实现类——DefaultListableBeanFactory类"><a href="#第一个可以独立运行的容器实现类——DefaultListableBeanFactory类" class="headerlink" title="第一个可以独立运行的容器实现类——DefaultListableBeanFactory类"></a>第一个可以独立运行的容器实现类——DefaultListableBeanFactory类</h4><p><code>DefaultListableBeanFactory</code>类是Spring提供的默认简单容器实现类，也是从BeanFactory接口一路继承与实现下来的第一个可以独立运行的容器类，该类间接继承了AbstractBeanFactory抽象类，同时还实现了Spring集大成的容器接口——<code>ConfigurableListableBeanFactory</code> 接口，这保证了<code>DefaultListableBeanFactory</code>完整实现了简单容器中对Bean的各种操作功能。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/20230923183008.png" alt="image-20230923183008425"></p>
+<p>而且我们还在源码中发现，<code>DefaultListableBeanFactory</code>同时还实现了<code>BeanDefinitionRegistry</code>接口</p>
+<ul>
+<li>BeanDefinitionRegistry接口提供了向容器注册表中注册BeanDefinition的各种方法。</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/20230923183057.png" alt="image-20230923183057649"></p>
+<p>正是因为实现了此接口，所以<code>DefaultListableBeanFactory</code>也是一个<code>BeanDefinition</code>注册器，拥有了注册BeanDefinition的作用。可以从源码中发现，<code>DefaultListableBeanFactory</code>中维护了一个<code>beanDefinitionMap</code>，即BeanDefinition注册表。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/20230923183215.png" alt="image-20230923183215861"></p>
+<p>以上，BeanFactory简单容器体系就介绍完了，下面进入高级容器——ApplicationContext部分。</p>
+<h2 id="面向用户的高级容器——ApplicationContext接口体系"><a href="#面向用户的高级容器——ApplicationContext接口体系" class="headerlink" title="面向用户的高级容器——ApplicationContext接口体系"></a>面向用户的高级容器——ApplicationContext接口体系</h2><p><code>ApplicationContext</code>直接翻译也被称作<code>应用上下文</code>，其实这个字面很难被理解，<code>Context</code>的意思是<code>上下文</code>、<code>环境</code>，其实个人认为翻译成<code>应用环境</code>可能会更好一些，可以认为<code>ApplicationContext</code>是一种定义了维护<code>BeanDefinition</code>和<code>实例化对象</code>之间协作关系的高级接口，而这个高级接口，又是利用了Spring中普通容器来实现的，所以也被称作高级容器，也是我们平时认为的Spring容器体系，因为BeanFactroy虽然也是容器，但是平时我们直接接触不到，作为用户，平时在使用的时候，我们直接用的是<code>ApplicationContext</code>高级容器，也就是说，高级容器是面向用户的，而普通容器是面向框架的，是Spring容器的基石。</p>
+<p><code>ApplicationContext</code>接口继承自<code>BeanFactory</code>的二级接口<code>ListableBeanFactory</code>和<code>HierarchicalBeanFactroy</code>。所以高级容器其实也是在普通容器的基础上实现的，在普通容器的基础上扩展除了非常丰富的功能接口来供用户使用，如果深入去阅读源码，会发现其实在高级容器的一个很重要的抽象类<code>AbstractRefreshableApplicationContext</code>内部，是有一个私有的普通容器对象的，而我们常用的一些高级容器实现类，比入<code>FileSystemXmlApplicationContext</code>、<code>AnnotatioConfigWebApplicationContext</code>等都继承自这个抽象类，也就是说都继承了这个普通容器对象：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/20230923183510.png" alt="image-20230923183510685"></p>
+<p>这个内部的DefaultListableBeanFactory对象，通常也被称作内部容器，Spring的设计大量运用了委托模式的思想，这里在高级容器内部实例化一个内部容器出来，将普通容器的所有操作都委托给内部容器去实现，而高级容器本身只需要关注与拓展面向用户的操作即可。</p>
+<p>下图是<code>ApplicationContext</code>体系类图，之后我们将展开分析一下这个体系：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/20230923183540.png" alt="image-20230923183540502"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/20230923184438.png" alt="image-20230923184438172"></p>
+<ul>
+<li>它继承了 <code>EnvironmentCapable</code> 接口, 该接口主要是获取一些容器的启动参数，还可能会整合了更多的功能, 其中 <code>ConfigurableEnvironment</code> 继承了 <code>Environment</code>，通过 <code>ConfigurableEnvironment</code> 实例可以调用一些系统相关配置，对于 <code>web</code> 容器来讲, 还可以使用 <code>Environment</code> 获取 <code>Servlet</code> 相关配置信息 <code>web.xml</code> 的内容。</li>
+<li><code>ApplicatoinContext</code> 还继承了 <code>ListableBeanFactory</code>, 可以使用列表的方式来管理 Bean, 还支持多层级的容器。</li>
+<li><code>ApplicatoinContext</code> 还继承了 <code>ResourcePatternResolver</code>, 该接口可以用来加载资源文件，还继承了 <code>Message</code>, 可管理 <code>message</code> 实现国际化的功能，继承 <code>ApplicationEventPublisher</code> 具备了事件发布能力, 容器在启动的时候, 会给自身注册一些 <code>Listener</code>, 这些 <code>Listener</code> 就是用来监听容器发布的事件, 就是所谓的监听机制。</li>
+</ul>
+<p>使用注解与使用配置文件，基本注解我们配置扫描包名，基于 <code>xml</code> 我们要设置配置文件路径，注解与配置文件这些容器相同的一步的就是必须要调用 <code>refresh</code> 方法。该方法可以看作是 IOC 容器的启动方法。<strong>主要功能如：</strong></p>
+<ul>
+<li>容器初始化</li>
+<li>配置解析 <code>BeanFactoryPostProcessor</code> 和 <code>BeanPostProcessor</code> 的注册和激活</li>
+<li>国际化配置</li>
+<li>Web 容器的构造等…</li>
+</ul>
+<h4 id="ConfigurableApplicationContext-接口"><a href="#ConfigurableApplicationContext-接口" class="headerlink" title="ConfigurableApplicationContext 接口"></a>ConfigurableApplicationContext 接口</h4><p>在 <code>ApplicationContext</code> 接口当中所有方法都是只读的, 提供 get 方法供外界访问，需要使用子接口 <code>ConfigurableApplicationContext</code> 赋与 <code>ApplicationContext</code> 可配置的能力，<code>ConfigurableApplicationContext</code> 继承了两个接口 <code>Liftcycle</code> 与 <code>Closeable</code>，<code>Liftcycle</code> 接口主要用于对容器生命周期的管理, <code>Closeabled</code> 在关闭容器的时候 释放相关资源。</p>
+<p>Lifecycle.java</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/20230923184640.png" alt="image-20230923184640071"></p>
+<p>Closeable.java</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/20230923184655.png" alt="image-20230923184655431"></p>
+<p>主要新增了两个方法 <code>refresh</code> 与 <code>close</code> 具备启动刷新和关闭上下文的能力，在 <code>ApplicationContext</code> 被关闭的情况下 <code>refresh</code> 可以重新启动容器, 它还可以清楚缓存并重新装载配置信息。</p>
+<p><code>ConfigurableApplicationContext</code> 的实现类 <code>AbstractApplicationContext</code> 它是 Spring 高级容器中最重要的一个类，它里面定义了 <code>ApplicationContext</code> 中简单不易动的部分，主要内容如：</p>
+<ul>
+<li>容器工厂的处理：<code>AbstractApplicationContext</code></li>
+<li>事件的发送广播：<code>publishEvent</code></li>
+<li>监听器的注册：<code>registerListeners</code></li>
+<li>容器初始化：<code>refresh</code></li>
+<li>…</li>
+</ul>
+<p>它几乎把容器部分的逻辑都实现了。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/20230923184808.png" alt="image-20230923184808724"></p>
+<h3 id="ApplicationContext-常用实现"><a href="#ApplicationContext-常用实现" class="headerlink" title="ApplicationContext 常用实现"></a>ApplicationContext 常用实现</h3><h4 id="FileSystemXmlApplicationContext"><a href="#FileSystemXmlApplicationContext" class="headerlink" title="FileSystemXmlApplicationContext"></a>FileSystemXmlApplicationContext</h4><p>用于解析文件系统中 XML 配置文件, 文件的路径可以是具体的文件路径，例如：<code>xxx/application.xml</code>，也可以是 <code>ant</code> 风格的配置，例如：<code>xxx/*-context.xml</code>。</p>
+<h4 id="ClassPathXmlApplicationContext"><a href="#ClassPathXmlApplicationContext" class="headerlink" title="ClassPathXmlApplicationContext"></a>ClassPathXmlApplicationContext</h4><p>从 classpaath 加载 BeanDefinition 相关资源，设置 classPath 的目的在于告诉 Java 执行环境, 在哪些目录下可以找到我们想要执行的类或者包, 是用于处理类路径下的 XML 配置文件。</p>
+<h4 id="XmlWebApplicationContext"><a href="#XmlWebApplicationContext" class="headerlink" title="XmlWebApplicationContext"></a>XmlWebApplicationContext</h4><p>用于 Web 应用程序的容器。</p>
+<h4 id="AnnotationConfigServletWebServerApplicationContext"><a href="#AnnotationConfigServletWebServerApplicationContext" class="headerlink" title="AnnotationConfigServletWebServerApplicationContext"></a>AnnotationConfigServletWebServerApplicationContext</h4><p>这个不在 Spring 框架的模块中, 它存在 SpringBoot 的 Boot 模块下。</p>
+<h4 id="AnnotationConfigReactiveWebServerApplicationContext"><a href="#AnnotationConfigReactiveWebServerApplicationContext" class="headerlink" title="AnnotationConfigReactiveWebServerApplicationContext"></a>AnnotationConfigReactiveWebServerApplicationContext</h4><p>对于响应式的编程，来满足响应式的容器需求，也是在 SpringBoot 当中。</p>
+<h4 id="AnnotationConfigApplicationContext"><a href="#AnnotationConfigApplicationContext" class="headerlink" title="AnnotationConfigApplicationContext"></a>AnnotationConfigApplicationContext</h4><p>对于普通的非 Web 应用我们基本上使用的都是这一个。</p>
+<h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_42764725/article/details/106595644">Spring框架源码分析（IoC）：BeanFactory和ApplicationContext容器家族</a></li>
+</ul>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="http://example.com">smin</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="http://example.com/2023/09/23/Spring-IOC%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%EF%BC%88%E4%BA%8C%EF%BC%89%E2%80%93BeanFactory%E5%92%8CApplicationContext%E5%AE%B9%E5%99%A8%E5%AE%B6%E6%97%8F/">http://example.com/2023/09/23/Spring-IOC%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%EF%BC%88%E4%BA%8C%EF%BC%89%E2%80%93BeanFactory%E5%92%8CApplicationContext%E5%AE%B9%E5%99%A8%E5%AE%B6%E6%97%8F/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://example.com" target="_blank">Fight-Qing</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Spring/">Spring</a><a class="post-meta__tags" href="/tags/%E6%A1%86%E6%9E%B6/">框架</a><a class="post-meta__tags" href="/tags/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/">源码分析</a><a class="post-meta__tags" href="/tags/IOC/">IOC</a></div><div class="post_share"><div class="social-share" data-image="https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/20230717002706.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/2023/09/23/Spring-IOC%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%EF%BC%88%E4%B8%80%EF%BC%89-IoC%E3%80%81DI%E4%B8%8E%E5%AE%B9%E5%99%A8%E3%80%81Bean%E5%92%8CBeanDefinition/" title="Spring IOC源码分析（一）--IoC、DI与容器、Bean和BeanDefinition"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Spring IOC源码分析（一）--IoC、DI与容器、Bean和BeanDefinition</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><div><a href="/2023/09/23/Spring-IOC%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%EF%BC%88%E4%B8%80%EF%BC%89-IoC%E3%80%81DI%E4%B8%8E%E5%AE%B9%E5%99%A8%E3%80%81Bean%E5%92%8CBeanDefinition/" title="Spring IOC源码分析（一）--IoC、DI与容器、Bean和BeanDefinition"><div class="cover" style="background: var(--default-bg-color)"></div><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-09-23</div><div class="title">Spring IOC源码分析（一）--IoC、DI与容器、Bean和BeanDefinition</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content is-expand"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Spring-IOC%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%EF%BC%88%E4%BA%8C%EF%BC%89%E2%80%93BeanFactory%E5%92%8CApplicationContext%E5%AE%B9%E5%99%A8%E5%AE%B6%E6%97%8F"><span class="toc-number">1.</span> <span class="toc-text">Spring IOC源码分析（二）–BeanFactory和ApplicationContext容器家族</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#BeanFactory%EF%BC%9ASpring%E5%AE%B9%E5%99%A8%E7%9A%84%E5%9F%BA%E7%9F%B3%EF%BC%8C%E9%A1%B6%E7%BA%A7%E5%AE%B9%E5%99%A8%E6%8E%A5%E5%8F%A3"><span class="toc-number">1.1.</span> <span class="toc-text">BeanFactory：Spring容器的基石，顶级容器接口</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%A1%B6%E7%BA%A7%E4%BA%8C%E7%BA%A7%E6%8E%A5%E5%8F%A3%EF%BC%9AListableBeanFactory%E5%92%8CHierarchicalBeanFactroy%E3%80%82"><span class="toc-number">1.1.0.1.</span> <span class="toc-text">顶级二级接口：ListableBeanFactory和HierarchicalBeanFactroy。</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%A4%8D%E6%9D%82%E9%85%8D%E7%BD%AE%E7%9A%84Bean%E5%B7%A5%E5%8E%82%EF%BC%9AConfigurableBeanFactory%E6%8E%A5%E5%8F%A3"><span class="toc-number">1.1.0.2.</span> <span class="toc-text">复杂配置的Bean工厂：ConfigurableBeanFactory接口</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%87%AA%E5%8A%A8%E8%A3%85%E9%85%8D%E5%B7%A5%E5%8E%82%EF%BC%9AAutowireCapableBeanFactory%E6%8E%A5%E5%8F%A3"><span class="toc-number">1.1.0.3.</span> <span class="toc-text">自动装配工厂：AutowireCapableBeanFactory接口</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Bean%E5%B7%A5%E5%8E%82%E6%8E%A5%E5%8F%A3%E7%9A%84%E9%9B%86%E5%A4%A7%E6%88%90%E8%80%85%EF%BC%9AConfigurableListableBeanFactory-%E6%8E%A5%E5%8F%A3"><span class="toc-number">1.1.0.4.</span> <span class="toc-text">Bean工厂接口的集大成者：ConfigurableListableBeanFactory 接口</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Bean%E5%B7%A5%E5%8E%82%E7%9A%84%E6%8A%BD%E8%B1%A1%E5%AE%9E%E7%8E%B0%E5%9F%BA%E7%B1%BB%EF%BC%9AAbstractBeanFactory%E6%8A%BD%E8%B1%A1%E7%B1%BB"><span class="toc-number">1.1.0.5.</span> <span class="toc-text">Bean工厂的抽象实现基类：AbstractBeanFactory抽象类</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%AC%AC%E4%B8%80%E4%B8%AA%E5%8F%AF%E4%BB%A5%E7%8B%AC%E7%AB%8B%E8%BF%90%E8%A1%8C%E7%9A%84%E5%AE%B9%E5%99%A8%E5%AE%9E%E7%8E%B0%E7%B1%BB%E2%80%94%E2%80%94DefaultListableBeanFactory%E7%B1%BB"><span class="toc-number">1.1.0.6.</span> <span class="toc-text">第一个可以独立运行的容器实现类——DefaultListableBeanFactory类</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%9D%A2%E5%90%91%E7%94%A8%E6%88%B7%E7%9A%84%E9%AB%98%E7%BA%A7%E5%AE%B9%E5%99%A8%E2%80%94%E2%80%94ApplicationContext%E6%8E%A5%E5%8F%A3%E4%BD%93%E7%B3%BB"><span class="toc-number">1.2.</span> <span class="toc-text">面向用户的高级容器——ApplicationContext接口体系</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#ConfigurableApplicationContext-%E6%8E%A5%E5%8F%A3"><span class="toc-number">1.2.0.1.</span> <span class="toc-text">ConfigurableApplicationContext 接口</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ApplicationContext-%E5%B8%B8%E7%94%A8%E5%AE%9E%E7%8E%B0"><span class="toc-number">1.2.1.</span> <span class="toc-text">ApplicationContext 常用实现</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#FileSystemXmlApplicationContext"><span class="toc-number">1.2.1.1.</span> <span class="toc-text">FileSystemXmlApplicationContext</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#ClassPathXmlApplicationContext"><span class="toc-number">1.2.1.2.</span> <span class="toc-text">ClassPathXmlApplicationContext</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#XmlWebApplicationContext"><span class="toc-number">1.2.1.3.</span> <span class="toc-text">XmlWebApplicationContext</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#AnnotationConfigServletWebServerApplicationContext"><span class="toc-number">1.2.1.4.</span> <span class="toc-text">AnnotationConfigServletWebServerApplicationContext</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#AnnotationConfigReactiveWebServerApplicationContext"><span class="toc-number">1.2.1.5.</span> <span class="toc-text">AnnotationConfigReactiveWebServerApplicationContext</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#AnnotationConfigApplicationContext"><span class="toc-number">1.2.1.6.</span> <span class="toc-text">AnnotationConfigApplicationContext</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0"><span class="toc-number">1.3.</span> <span class="toc-text">参考文章</span></a></li></ol></li></ol></div></div></div></div></main><footer id="footer" style="background-image: url('https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/index_img.jpg')"><div id="footer-wrap"><div class="copyright">&copy;2023 By smin</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script defer="defer" id="fluttering_ribbon" mobile="true" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-fluttering-ribbon.min.js"></script><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/activate-power-mode.min.js"></script><script>POWERMODE.colorful = true;
+POWERMODE.shake = true;
+POWERMODE.mobile = false;
+document.body.addEventListener('input', POWERMODE);
+</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div></body></html>
