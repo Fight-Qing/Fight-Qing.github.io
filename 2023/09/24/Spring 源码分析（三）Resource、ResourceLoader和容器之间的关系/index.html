@@ -1,0 +1,296 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Spring 源码分析（三）--Resource、ResourceLoader和容器之间的关系 | Fight-Qing</title><meta name="author" content="smin"><meta name="copyright" content="smin"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="Spring 源码分析（三）–Resource、ResourceLoader和容器之间的关系​	Java 中有各种各样的资源，资源的位置包括本地文件系统、网络、类路径等，资源的形式可以包括文件、二进制流、字节流等，针对不同的资源又有不同的加载形式。本地文件系统中的文件在 Java 中使用 File 表示，使用 FileInputStream 读取。网络上的资源使用 URL 表示，使用 URLCon">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring 源码分析（三）--Resource、ResourceLoader和容器之间的关系">
+<meta property="og:url" content="http://example.com/2023/09/24/Spring%20%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%EF%BC%88%E4%B8%89%EF%BC%89Resource%E3%80%81ResourceLoader%E5%92%8C%E5%AE%B9%E5%99%A8%E4%B9%8B%E9%97%B4%E7%9A%84%E5%85%B3%E7%B3%BB/index.html">
+<meta property="og:site_name" content="Fight-Qing">
+<meta property="og:description" content="Spring 源码分析（三）–Resource、ResourceLoader和容器之间的关系​	Java 中有各种各样的资源，资源的位置包括本地文件系统、网络、类路径等，资源的形式可以包括文件、二进制流、字节流等，针对不同的资源又有不同的加载形式。本地文件系统中的文件在 Java 中使用 File 表示，使用 FileInputStream 读取。网络上的资源使用 URL 表示，使用 URLCon">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/20230717002706.png">
+<meta property="article:published_time" content="2023-09-24T04:12:33.000Z">
+<meta property="article:modified_time" content="2023-09-24T06:43:55.008Z">
+<meta property="article:author" content="smin">
+<meta property="article:tag" content="Spring">
+<meta property="article:tag" content="框架">
+<meta property="article:tag" content="源码分析">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/20230717002706.png"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://example.com/2023/09/24/Spring%20%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%EF%BC%88%E4%B8%89%EF%BC%89Resource%E3%80%81ResourceLoader%E5%92%8C%E5%AE%B9%E5%99%A8%E4%B9%8B%E9%97%B4%E7%9A%84%E5%85%B3%E7%B3%BB/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: true,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Spring 源码分析（三）--Resource、ResourceLoader和容器之间的关系',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2023-09-24 14:43:55'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/20230717002706.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">14</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">17</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">7</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/index_img.jpg')"><nav id="nav"><span id="blog-info"><a href="/" title="Fight-Qing"><span class="site-name">Fight-Qing</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">Spring 源码分析（三）--Resource、ResourceLoader和容器之间的关系</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-09-24T04:12:33.000Z" title="发表于 2023-09-24 12:12:33">2023-09-24</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2023-09-24T06:43:55.008Z" title="更新于 2023-09-24 14:43:55">2023-09-24</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/">源码分析</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/%E6%A1%86%E6%9E%B6/">框架</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/%E6%A1%86%E6%9E%B6/spring/">spring</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="Spring 源码分析（三）--Resource、ResourceLoader和容器之间的关系"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h1 id="Spring-源码分析（三）–Resource、ResourceLoader和容器之间的关系"><a href="#Spring-源码分析（三）–Resource、ResourceLoader和容器之间的关系" class="headerlink" title="Spring 源码分析（三）–Resource、ResourceLoader和容器之间的关系"></a>Spring 源码分析（三）–Resource、ResourceLoader和容器之间的关系</h1><p>​	Java 中有各种各样的资源，资源的位置包括本地文件系统、网络、类路径等，资源的形式可以包括文件、二进制流、字节流等，针对不同的资源又有不同的加载形式。本地文件系统中的文件在 Java 中使用 File 表示，使用 FileInputStream 读取。网络上的资源使用 URL 表示，使用 URLConnection 获取 InputStream 进行读取。而类路径下的资源使用 ClassLoader 进行读取。为了使用统一的方式访问资源，Spring 将资源抽象为 Resource，将资源的加载抽象为 ResourceLoader。<strong>Spring 配置文件的读取以及扫描包中的 bean 都会通过 Resource 访问资源。</strong></p>
+<h2 id="Resource接口体系"><a href="#Resource接口体系" class="headerlink" title="Resource接口体系"></a>Resource接口体系</h2><ul>
+<li><p>Resource接口是Spring中访问资源的抽象，Resource接口本身只提供了规定，下面有很多的实现类。都是从实际的系统底层资源进行抽象的资源描述符。一般来说在Spring中是将资源描述为URL格式和Ant风格带通配符的资源地址。</p>
+</li>
+<li><p>Resource接口的家族体系类图如下图所示：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/20230924123729.png" alt="image-20230924123729107"></p>
+</li>
+<li><h4 id="资源描述的顶级接口——Resource接口"><a href="#资源描述的顶级接口——Resource接口" class="headerlink" title="资源描述的顶级接口——Resource接口"></a>资源描述的顶级接口——<code>Resource</code>接口</h4></li>
+</ul>
+<p>Resource接口定义了资源常见的操作，抽象出了一些通用方法，再由不同的实现类去自定义。</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 继承自InputStreamSource，即继承了getInputStream()</span></span><br><span class="line"><span class="comment"> * 可以获取InputStreamSource类型的输入流</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">Resource</span> <span class="keyword">extends</span> <span class="title class_">InputStreamSource</span> &#123;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 判断某个资源是否以物理形式存在</span></span><br><span class="line">	<span class="type">boolean</span> <span class="title function_">exists</span><span class="params">()</span>;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 判断资源是否可读，只有返回true了，才可以getInputStream()</span></span><br><span class="line">	<span class="keyword">default</span> <span class="type">boolean</span> <span class="title function_">isReadable</span><span class="params">()</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> exists();</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 判断资源是否打开，如果已经打开就不能重复多次读写，资源应该在读取完毕之后关闭</span></span><br><span class="line">	<span class="keyword">default</span> <span class="type">boolean</span> <span class="title function_">isOpen</span><span class="params">()</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 判断资源是否为系统文件</span></span><br><span class="line">	<span class="keyword">default</span> <span class="type">boolean</span> <span class="title function_">isFile</span><span class="params">()</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 获取资源对象的URL，不能表示为URL就抛异常</span></span><br><span class="line">	URL <span class="title function_">getURL</span><span class="params">()</span> <span class="keyword">throws</span> IOException;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 获取资源对象的URI，不能表示为URI就抛异常</span></span><br><span class="line">	URI <span class="title function_">getURI</span><span class="params">()</span> <span class="keyword">throws</span> IOException;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 获取资源的File表示对象，不能表示为File就抛异常</span></span><br><span class="line">	File <span class="title function_">getFile</span><span class="params">()</span> <span class="keyword">throws</span> IOException;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">// 返回一个可以读取字节的通道</span></span><br><span class="line">	<span class="keyword">default</span> ReadableByteChannel <span class="title function_">readableChannel</span><span class="params">()</span> <span class="keyword">throws</span> IOException &#123;</span><br><span class="line">		<span class="keyword">return</span> Channels.newChannel(getInputStream());</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 获取资源内容的长度</span></span><br><span class="line">	<span class="type">long</span> <span class="title function_">contentLength</span><span class="params">()</span> <span class="keyword">throws</span> IOException;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 获取资源最后修改的时间戳</span></span><br><span class="line">	<span class="type">long</span> <span class="title function_">lastModified</span><span class="params">()</span> <span class="keyword">throws</span> IOException;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 相对于当前资源创建新的资源对象</span></span><br><span class="line">	Resource <span class="title function_">createRelative</span><span class="params">(String relativePath)</span> <span class="keyword">throws</span> IOException;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 获取资源的文件名</span></span><br><span class="line">	<span class="meta">@Nullable</span></span><br><span class="line">	String <span class="title function_">getFilename</span><span class="params">()</span>;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 获取资源的描述信息</span></span><br><span class="line">	String <span class="title function_">getDescription</span><span class="params">()</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Resource 接口继承了接口 InputStreamSource ，InputStreamSource 源码如下：</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">InputStreamSource</span> &#123;</span><br><span class="line">	<span class="comment">// 获取输入流</span></span><br><span class="line">	InputStream <span class="title function_">getInputStream</span><span class="params">()</span> <span class="keyword">throws</span> IOException;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>因此，每个 Resource 都可以获取到InputStream。</p>
+<p><code>Resource</code>接口中定义的方法，只是通用型，并不是每一种实现类资源类型都必须实现所有方法，比如getFile()方法是基于文件类型的资源实现类才需要实现，如果不是基于文件的资源一般不需要实现此方法。</p>
+<ul>
+<li><h4 id="可写的资源操作接口——WritableResource接口"><a href="#可写的资源操作接口——WritableResource接口" class="headerlink" title="可写的资源操作接口——WritableResource接口"></a>可写的资源操作接口——<code>WritableResource</code>接口</h4></li>
+</ul>
+<p>由于<code>Resource</code>接口继承自<code>InputStreamSource</code>，而且并没有扩展资源的写操作，因为对于大部分资源来说，不一定是可写的，或者是不需要写操作，但一定是需要可读的。Spring针对需要进行写操作的资源单独定义了一个<code>WritableResource</code>接口，其中定义了三个写操作相关的方法：</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">WritableResource</span> <span class="keyword">extends</span> <span class="title class_">Resource</span> &#123;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 表示资源是否支持写操作</span></span><br><span class="line">	<span class="keyword">default</span> <span class="type">boolean</span> <span class="title function_">isWritable</span><span class="params">()</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 用来获取OutputStream输出流</span></span><br><span class="line">	OutputStream <span class="title function_">getOutputStream</span><span class="params">()</span> <span class="keyword">throws</span> IOException;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 获取一个可以写入字节的通道</span></span><br><span class="line">	<span class="keyword">default</span> WritableByteChannel <span class="title function_">writableChannel</span><span class="params">()</span> <span class="keyword">throws</span> IOException &#123;</span><br><span class="line">		<span class="keyword">return</span> Channels.newChannel(getOutputStream());</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>可写的资源一般也包含可读资源的各种特性，因此<code>WritableResource</code>接口也继承了<code>Resource</code>接口。</p>
+<ul>
+<li><h4 id="抽象公共实现类——AbstractResource抽象类"><a href="#抽象公共实现类——AbstractResource抽象类" class="headerlink" title="抽象公共实现类——AbstractResource抽象类"></a>抽象公共实现类——<code>AbstractResource</code>抽象类</h4></li>
+</ul>
+<p>和其他接口体系一样，Spring在<code>Resource</code>接口的基础上实现了一个通用的抽象公共类<code>AbstractResource</code>，该抽象类实现了一些与<strong>资源类型无关</strong>的基础操作，如<code>exists()</code>方法等。</p>
+<p>在<code>AbstractResource</code>的实现中，是默认认为资源不是以URL或者File形式表现的，这样就可以适应一些非文件体系的资源，如字节流体系的资源等，对这些类型的操作，一般只支持读取操作。子类还可以通过覆盖<code>isOpen()</code>方法来标识当前资源是否支持多次读取。</p>
+<p>由于AbstractResource只是简单实现了一些逻辑，这里就不展示源码了，本系列文章意在快速纵览全局，这里学习类在体系中的地位即可，可以自行去阅读源码。</p>
+<ul>
+<li><h4 id="具体实现的资源类型——UrlResource、FileSystemResource、ClassPathResource和ServletContextResource。"><a href="#具体实现的资源类型——UrlResource、FileSystemResource、ClassPathResource和ServletContextResource。" class="headerlink" title="具体实现的资源类型——UrlResource、FileSystemResource、ClassPathResource和ServletContextResource。"></a>具体实现的资源类型——<code>UrlResource</code>、<code>FileSystemResource</code>、<code>ClassPathResource</code>和<code>ServletContextResource</code>。</h4><ul>
+<li><code>UrlResource</code>类：符合URL规范的资源类型都可以表示为UrlResource对象。其中URL既可以访问网络资源，也可以访问本地资源，加不同的前缀即可。</li>
+<li><code>ClassPathResource</code>类：该资源类型在Spring中是非常常用的一种资源类型，用来访问类加载路径下的资源，相对于其他的Resource类型，该种类型在Web应用中可以<strong>自动搜索位于WEB-INF&#x2F;classes下</strong>的资源文件，而无需使用绝对路径访问。</li>
+<li><code>FileSystemResource</code>类：访问文件系统资源的资源和类型，可以访问本地操作系统的文件系统。和Java提供的Feil文件类访问文件系统作用接近，但FileSystemResource可以消除操作系统底层差异，对不同的操作系统使用同一的API来访问。<code>FileSystemResource</code>类同时还实现了<code>WritableResource</code>接口，支持对资源的写操作。</li>
+<li><code>ServletContextResource</code>类：是ServletContext资源的Resource实现，用来访问相对于ServletContext路径下的资源。支持以流和URL的方式进行访问，但只有在扩展Web应用程序存档且资源实际位于文件系统上时才允许java.io.File访问。</li>
+</ul>
+</li>
+<li><h4 id="处理资源编码的实现类——EncodedResource类"><a href="#处理资源编码的实现类——EncodedResource类" class="headerlink" title="处理资源编码的实现类——EncodedResource类"></a>处理资源编码的实现类——<code>EncodedResource</code>类</h4></li>
+</ul>
+<p>在Resource接口下，有一个特殊的实现类是<code>EncodedResource</code>，该类主要实现了对文件编码类型的处理。</p>
+<p>在这里Spring对于资源类的设计中，其实用到了策略模式的设计思想，资源的类型在运行时是动态变化的，Spring将这几种资源实现类的选择进行了策略封装，让资源可以根据用户传入的类型自动选择资源实现类。</p>
+<p>这就是下面要讲的，Spring中自动根据资源地址，选择资源实现类的利器：<code>ResourceLoader</code>接口体系。</p>
+<h2 id="ResourceLoader接口体系"><a href="#ResourceLoader接口体系" class="headerlink" title="ResourceLoader接口体系"></a>ResourceLoader接口体系</h2><ul>
+<li><code>ResourceLoader</code>接口，顾名思义，设计的目的是为了快速返回（也就是加载）Resource实例的对象，其接口体系类图如下：</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/20230924133441.png" alt="image-20230924133441489"></p>
+<ul>
+<li><p>在上图的类图当中，我们可以看到几个熟悉的面孔——<code>ApplicationContext</code>，上下文容器。这说明高级容器（应用上下文容器）也是实现了ResourceLoader接口的，其本身就是一个<code>ResourceLoader</code>，也就是说高级容器都可以根据资源地址类型快速获取对应的Resource实例。</p>
+</li>
+<li><h4 id="资源获取策略的顶级接口——ResourceLoader接口"><a href="#资源获取策略的顶级接口——ResourceLoader接口" class="headerlink" title="资源获取策略的顶级接口——ResourceLoader接口"></a>资源获取策略的顶级接口——<code>ResourceLoader</code>接口</h4></li>
+</ul>
+<p>Resource主要提供了获取资源实例和ClassLoader的方法，其源码如下：</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">ResourceLoader</span> &#123;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 支持 classpath: 类型的路径匹配</span></span><br><span class="line">	<span class="type">String</span> <span class="variable">CLASSPATH_URL_PREFIX</span> <span class="operator">=</span> ResourceUtils.CLASSPATH_URL_PREFIX;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 根据路径信息返回一个对应的Resource资源实例</span></span><br><span class="line">	Resource <span class="title function_">getResource</span><span class="params">(String location)</span>;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 获取当前使用的ClassLoader，对外暴露，让ResourceLoader可以使用自定义的ClassLoader</span></span><br><span class="line">	<span class="meta">@Nullable</span></span><br><span class="line">	ClassLoader <span class="title function_">getClassLoader</span><span class="params">()</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><h3 id="ResourceLoader接口的默认实现类——DefaultResourceLoader类"><a href="#ResourceLoader接口的默认实现类——DefaultResourceLoader类" class="headerlink" title="ResourceLoader接口的默认实现类——DefaultResourceLoader类"></a><code>ResourceLoader</code>接口的默认实现类——<code>DefaultResourceLoader</code>类</h3></li>
+</ul>
+<p><code>DefaultResourceLoader</code>类实现了<code>ResourceLoader</code>接口加载资源的方法，同时也扩展了一些通用的基本操作方法，其中最重要的就是实现了getResource(String location);方法，其实现逻辑源码如下：</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> Resource <span class="title function_">getResource</span><span class="params">(String location)</span> &#123;</span><br><span class="line">	Assert.notNull(location, <span class="string">&quot;Location must not be null&quot;</span>);</span><br><span class="line">	<span class="comment">// ProtocolResolver：用户自定义协议资源解决策略，看看用户是否有提前自定义</span></span><br><span class="line">	<span class="keyword">for</span> (ProtocolResolver protocolResolver : getProtocolResolvers()) &#123;</span><br><span class="line">		<span class="type">Resource</span> <span class="variable">resource</span> <span class="operator">=</span> protocolResolver.resolve(location, <span class="built_in">this</span>);</span><br><span class="line">		<span class="keyword">if</span> (resource != <span class="literal">null</span>) &#123;</span><br><span class="line">			<span class="keyword">return</span> resource;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 如果用户没有自定义策略，就用以下自定义资源解析策略</span></span><br><span class="line">	<span class="comment">// 如果是&quot;/&quot;打头，就构造并返回ClassPathResource</span></span><br><span class="line">	<span class="keyword">if</span> (location.startsWith(<span class="string">&quot;/&quot;</span>)) &#123;</span><br><span class="line">		<span class="keyword">return</span> getResourceByPath(location);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">else</span> <span class="keyword">if</span> (location.startsWith(CLASSPATH_URL_PREFIX)) &#123;</span><br><span class="line">		<span class="comment">// 以&quot;classpath:&quot;打头也会构造并返回ClassPathResource在构造资源时还会获取类加载器</span></span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">ClassPathResource</span>(location.substring(CLASSPATH_URL_PREFIX.length()), getClassLoader());</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">else</span> &#123;</span><br><span class="line">		<span class="comment">// 如果上述方式无法构造。则构造URL地址，并尝试通过URL进行资源定位，若没有就抛出异常</span></span><br><span class="line">		<span class="comment">// 然后判断是否为FileURL，如果是就返回FileUrlResource，否则就构造UrlResource</span></span><br><span class="line">		<span class="comment">// 若是在加载的过程中抛出MalformedURLException，就委派getResourceByPath来实现资源定位和加载</span></span><br><span class="line">		<span class="keyword">try</span> &#123;</span><br><span class="line">			<span class="comment">// Try to parse the location as a URL...</span></span><br><span class="line">			<span class="type">URL</span> <span class="variable">url</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">URL</span>(location);</span><br><span class="line">			<span class="keyword">return</span> (ResourceUtils.isFileURL(url) ? <span class="keyword">new</span> <span class="title class_">FileUrlResource</span>(url) : <span class="keyword">new</span> <span class="title class_">UrlResource</span>(url));</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">catch</span> (MalformedURLException ex) &#123;</span><br><span class="line">			<span class="comment">// 不符合URL规范就当做普通路径处理</span></span><br><span class="line">			<span class="keyword">return</span> getResourceByPath(location);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><h3 id="ResourceLoader接口的增强——ResourcePatternResolver接口"><a href="#ResourceLoader接口的增强——ResourcePatternResolver接口" class="headerlink" title="ResourceLoader接口的增强——ResourcePatternResolver接口"></a><code>ResourceLoader</code>接口的增强——<code>ResourcePatternResolver</code>接口</h3></li>
+</ul>
+<p>Spring在提供了<code>ResourceLoader</code>接口之后，还提供了一个对其进行了增强的<code>ResourcePatternResolver</code>接口来扩展<code>ResourceLoader</code>。除了继承自Resource的方法外，ResourcePatternResolver额外扩充了一个方法，用来批量加载Resource资源对象，其源码如下：</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">ResourcePatternResolver</span> <span class="keyword">extends</span> <span class="title class_">ResourceLoader</span> &#123;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 支持classpath*:形式路径匹配，即Ant风格</span></span><br><span class="line">	<span class="type">String</span> <span class="variable">CLASSPATH_ALL_URL_PREFIX</span> <span class="operator">=</span> <span class="string">&quot;classpath*:&quot;</span>;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">// 批量加载Resource资源类型的实现</span></span><br><span class="line">	Resource[] getResources(String locationPattern) <span class="keyword">throws</span> IOException;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看出，<code>ResourcePatternResolver</code>支持了”classpath*:”开头的资源路径形式，即Ant风格路径，允许使用通配符来对路径进行匹配。”classpath*:”可以返回路径下所有满足条件的资源实例，而ResourceLoader本身只能一次返回一个资源。</p>
+<ul>
+<li><h3 id="ResourcePatternResolver接口的默认实现类——PathMatchingResourcePatternResolver类"><a href="#ResourcePatternResolver接口的默认实现类——PathMatchingResourcePatternResolver类" class="headerlink" title="ResourcePatternResolver接口的默认实现类——PathMatchingResourcePatternResolver类"></a><code>ResourcePatternResolver</code>接口的默认实现类——<code>PathMatchingResourcePatternResolver</code>类</h3></li>
+</ul>
+<p><code>PathMatchingResourcePatternResolver</code>中实例化了一个<code>DefaultResourceLoader</code>，继承来的<code>ResourceLoader</code>中的方法，就委托给了内部的<code>DefaultResourceLoader</code>对象去处理，而<code>PathMatchingResourcePatternResolver</code>只负责处理实现<code>ResourcePatternResolver</code>中的方法，主要是实现getResources(String locationPattern)方法。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/20230924133949.png" alt="image-20230924133949389"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/20230924134811.png" alt="image-20230924134811970"></p>
+<p><code>PathMatchingResourcePatternResolver</code>中还引入了一个新的组件<code>PathMatcher</code>，<code>PathMatcher</code>负责对对基于字符串的路径和指定的模式符号进行匹配。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/20230924134014.png" alt="image-20230924134014358"></p>
+<p>翻译一下这个接口的名字，可以将其翻译为路径匹配模板解释器，顾名思义，这个接口就是先用模板解释器对路径进行解析，分解成多个资源配置文件，将资源信息提供给资源加载器，后者根据不同策略将配置文件形成不同类型的资源（Resource）。</p>
+<ul>
+<li><h4 id="高级容器和ResourceLoader之间微妙的关系：实现了ResourceLoader接口的ApplicationContext体系"><a href="#高级容器和ResourceLoader之间微妙的关系：实现了ResourceLoader接口的ApplicationContext体系" class="headerlink" title="高级容器和ResourceLoader之间微妙的关系：实现了ResourceLoader接口的ApplicationContext体系"></a>高级容器和ResourceLoader之间微妙的关系：实现了<code>ResourceLoader</code>接口的<code>ApplicationContext</code>体系</h4></li>
+</ul>
+<p>从<code>ApplicationContext</code>的源码中，我们可以看到，这个接口确实继承了<code>ResourcePatternResolver</code>接口，也就是<code>ApplicationContext</code>本身也是个模板解释器和资源加载器，是模板解释器的具体实现，是支持Ant风格路径匹配和批量加载资源的一个资源加载器。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/20230924134111.png" alt="image-20230924134111322"></p>
+<p>作为高级容器的顶级接口，<code>ApplicationContext</code>继承了<code>ResourcePatternResolver</code>接口，这也就代表了高级容器下面整个体系都间接地继承了<code>ResourcePatternResolver</code>接口。</p>
+<p>例如<code>ApplicationContext</code>的抽象实现类<code>AbstractApplicationContext</code>在实现<code>ConfigurableApplicationContext</code>的基础上，同时还继承了ResourceLoader的实现类DefaultResourceLoader。</p>
+<p>其实实现<code>ConfigurableApplicationContext</code>也就意味着实现了<code>ResourcePatternResolver</code>，但是Spring开发人员显然不想将资源解释的逻辑直接暴露在容器中（就是<code>ConfigurableApplicationContext</code>本来是有解析的能力的，但是为了专心做一个容器，就选择再加一个有解析能力的<code>DefaultResourceLoader</code>进来），于是继承了DefaultResourceLoader，将解析逻辑与容器的实现进行了解耦。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/20230924142052.png" alt="image-20230924142052744"></p>
+<p>在<code>AbstractApplicationContext</code>的构造函数源码中可以看到，在这里将<code>ResourcePatternResolver</code>接口的实例——<code>PathMatchingResourcePatternResolver</code>实例进行了初始化，并且传入的resourceLoader实例，就是容器本身（容器继承了DefaultResourceLoader），也就是将容器进行了献祭，来实现资源解释器。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/20230924142157.png" alt="image-20230924142157045"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/20230924142205.png" alt="image-20230924142205085"></p>
+<blockquote>
+<p>这段文字主要在解释Spring框架中<code>ConfigurableApplicationContext</code>和<code>ResourcePatternResolver</code>之间的关系，以及为什么Spring选择继承<code>DefaultResourceLoader</code>来实现这个功能。</p>
+<p>首先，我们要知道<code>ConfigurableApplicationContext</code>是Spring的应用程序上下文接口，它扩展了<code>ApplicationContext</code>接口并添加了一些额外的功能。而<code>ResourcePatternResolver</code>是一个接口，它的主要任务是根据给定的资源名称找到对应的资源。</p>
+<p>在Spring中，<code>ResourcePatternResolver</code>的实现类是<code>PathMatchingResourcePatternResolver</code>。它的实例在<code>AbstractApplicationContext</code>的构造函数中被初始化，并且传入的<code>resourceLoader</code>实例就是容器本身（因为容器继承了<code>DefaultResourceLoader</code>）。</p>
+<p>这样做的目的是为了让资源的解析逻辑与容器的实现进行了解耦。也就是说，当Spring容器需要解析一个资源时，它不直接使用<code>ResourcePatternResolver</code>来解析，而是使用容器自己提供的<code>DefaultResourceLoader</code>来解析。这样做的好处是，如果将来需要改变资源解析的方式，只需要修改<code>DefaultResourceLoader</code>的实现，而不需要在其他地方进行修改。</p>
+<p>总的来说，这句话的意思是：Spring通过继承<code>DefaultResourceLoader</code>来实现资源解析器，并将解析逻辑与容器的实现进行了解耦，这样可以使代码更加灵活和可维护。</p>
+<p>（内容由讯飞星火AI生成）</p>
+</blockquote>
+<p>所以，Resource、ResourceLoader和容器之间的关系可以用下图来表示：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/20230924142222.png" alt="image-20230924142222138"></p>
+<h2 id="如何在-Spring-中获取-Resource-和-ResourceLoader"><a href="#如何在-Spring-中获取-Resource-和-ResourceLoader" class="headerlink" title="如何在 Spring 中获取 Resource 和 ResourceLoader"></a>如何在 Spring 中获取 Resource 和 ResourceLoader</h2><p>Spring 的内部有关资源的加载大量使用了 Resource 和 ResourceLoader，自然我们也同样可以使用 Resource 获取资源。<br>由于 Resource 与具体的资源进行绑定，Spring 并未把它作为 bean 注入到容器中，为了获取 Resource ，我们可以通过在 bean 的 成员变量中通过 @Value 注入 Resource 及其数组对象。示例如下。</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 类路径下创建文件 META-INF/dev.properties 内容为 profile=dev</span></span><br><span class="line"><span class="comment">// 类路径下创建文件 META-INF/prod.properties 内容为 profile=prod</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Main</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Value(&quot;classpath:/META-INF/prod.properties&quot;)</span></span><br><span class="line">    <span class="keyword">private</span> Resource resource;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Value(&quot;classpath*:/META-INF/*.properties&quot;)</span></span><br><span class="line">    <span class="keyword">private</span> Resource[] resources;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> IOException &#123;</span><br><span class="line">        <span class="type">AnnotationConfigApplicationContext</span> <span class="variable">context</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">AnnotationConfigApplicationContext</span>(Main.class);</span><br><span class="line">        <span class="type">Main</span> <span class="variable">bean</span> <span class="operator">=</span> context.getBean(Main.class);</span><br><span class="line">        <span class="type">String</span> <span class="variable">content</span> <span class="operator">=</span> FileReader.create(bean.resource.getFile()).readString();</span><br><span class="line">        System.out.println(content);</span><br><span class="line">        System.out.println(<span class="string">&quot;=========&quot;</span>);</span><br><span class="line">        <span class="keyword">for</span> (Resource resource : bean.resources) &#123;</span><br><span class="line">            System.out.println(FileReader.create(resource.getFile()).readString());</span><br><span class="line">            System.out.println(<span class="string">&quot;=========&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>执行结果如下：</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">profile=prod</span><br><span class="line">=========</span><br><span class="line">profile=dev</span><br><span class="line">=========</span><br><span class="line">profile=prod</span><br><span class="line">=========</span><br><span class="line"><span class="number">123456</span></span><br></pre></td></tr></table></figure>
+
+<p>通过 @Value 注入 Resource ，成功读取到了类路径下的资源文件。</p>
+<p>ResourceLoader 作为可能会被经常使用的组件，Spring 已经将其注册为 bean，因此可以直接通过 @Autowire 注入，另外由于 ApplicationContext 继承了 ResourceLoader 接口，因此也可以直接通过 @Autowire 注入 ApplicationContext 来使用 ResourceLoader，此外 Spring 还提供了 ResourceLoaderAware 接口，在 bean 的生命周期中，如果 bean 实现了接口ResourceLoaderAware ，则 Spring 会调用 setResourceLoader 方法，这样就拿到了 ResourceLoader，拿到后我们就可以直接用来加载资源。示例代码如下。</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Main</span> <span class="keyword">implements</span> <span class="title class_">ResourceLoaderAware</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> ResourceLoader resourceLoader;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> ApplicationContext applicationContext;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> ResourceLoader awareResourceLoader;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setResourceLoader</span><span class="params">(ResourceLoader resourceLoader)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.awareResourceLoader = resourceLoader;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> IOException &#123;</span><br><span class="line">        <span class="type">AnnotationConfigApplicationContext</span> <span class="variable">context</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">AnnotationConfigApplicationContext</span>(Main.class);</span><br><span class="line">        <span class="type">Main</span> <span class="variable">bean</span> <span class="operator">=</span> context.getBean(Main.class);</span><br><span class="line">        System.out.println(bean.resourceLoader);</span><br><span class="line">        System.out.println(bean.applicationContext);</span><br><span class="line">        System.out.println(bean.awareResourceLoader);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>执行结果如下。</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">org.springframework.context.annotation.AnnotationConfigApplicationContext@6aaa5eb0, started on Wed Sep <span class="number">02</span> <span class="number">22</span>:<span class="number">36</span>:<span class="number">40</span> CST <span class="number">2020</span></span><br><span class="line">org.springframework.context.annotation.AnnotationConfigApplicationContext@6aaa5eb0, started on Wed Sep <span class="number">02</span> <span class="number">22</span>:<span class="number">36</span>:<span class="number">40</span> CST <span class="number">2020</span></span><br><span class="line">org.springframework.context.annotation.AnnotationConfigApplicationContext@6aaa5eb0, started on Wed Sep <span class="number">02</span> <span class="number">22</span>:<span class="number">36</span>:<span class="number">40</span> CST <span class="number">2020</span></span><br></pre></td></tr></table></figure>
+
+<p>三种方式都打印出来了结果，说明这三种方式都可以正常获取 ResourceLoader，并且这三种方式获取到的对象为同一个。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>Resource 和 ResourceLoader 作为 Spring 中资源和加载资源的抽象，在底层加载资源的地方都会被用到，通过对这两者的熟悉，在阅读 Spring 源码时，可以把精力放在其他地方，并且我们也可以使用 Resource 获取我们自己的资源。</p>
+<h2 id="补充："><a href="#补充：" class="headerlink" title="补充："></a>补充：</h2><p>Ant通配符：</p>
+<ul>
+<li>？匹配任何单字符</li>
+<li>*匹配0或者任意数量的字符</li>
+<li>**匹配0或者更多的目录</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/20230924130900.png" alt="image-20230924130900600"></p>
+<h2 id="参考文章："><a href="#参考文章：" class="headerlink" title="参考文章："></a>参考文章：</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/zzuhkp/article/details/107749156">Spring 资源管理 (Resource)</a></li>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_42764725/article/details/106653883">Spring框架源码分析（IoC）：Resource、ResourceLoader和容器之间的关系</a></li>
+</ul>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="http://example.com">smin</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="http://example.com/2023/09/24/Spring%20%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%EF%BC%88%E4%B8%89%EF%BC%89Resource%E3%80%81ResourceLoader%E5%92%8C%E5%AE%B9%E5%99%A8%E4%B9%8B%E9%97%B4%E7%9A%84%E5%85%B3%E7%B3%BB/">http://example.com/2023/09/24/Spring%20%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%EF%BC%88%E4%B8%89%EF%BC%89Resource%E3%80%81ResourceLoader%E5%92%8C%E5%AE%B9%E5%99%A8%E4%B9%8B%E9%97%B4%E7%9A%84%E5%85%B3%E7%B3%BB/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://example.com" target="_blank">Fight-Qing</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Spring/">Spring</a><a class="post-meta__tags" href="/tags/%E6%A1%86%E6%9E%B6/">框架</a><a class="post-meta__tags" href="/tags/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/">源码分析</a></div><div class="post_share"><div class="social-share" data-image="https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/20230717002706.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/2023/09/23/Spring-%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%EF%BC%88%E4%BA%8C%EF%BC%89BeanFactory%E5%92%8CApplicationContext%E5%AE%B9%E5%99%A8%E5%AE%B6%E6%97%8F/" title="Spring 源码分析（二）–BeanFactory和ApplicationContext容器家族"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Spring 源码分析（二）–BeanFactory和ApplicationContext容器家族</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><div><a href="/2023/09/23/Spring-%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%EF%BC%88%E4%B8%80%EF%BC%89IoC%E3%80%81DI%E4%B8%8E%E5%AE%B9%E5%99%A8%E3%80%81Bean%E5%92%8CBeanDefinition/" title="Spring 源码分析（一）--IoC、DI与容器、Bean和BeanDefinition"><div class="cover" style="background: var(--default-bg-color)"></div><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-09-23</div><div class="title">Spring 源码分析（一）--IoC、DI与容器、Bean和BeanDefinition</div></div></a></div><div><a href="/2023/09/23/Spring-%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%EF%BC%88%E4%BA%8C%EF%BC%89BeanFactory%E5%92%8CApplicationContext%E5%AE%B9%E5%99%A8%E5%AE%B6%E6%97%8F/" title="Spring 源码分析（二）–BeanFactory和ApplicationContext容器家族"><div class="cover" style="background: var(--default-bg-color)"></div><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-09-23</div><div class="title">Spring 源码分析（二）–BeanFactory和ApplicationContext容器家族</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content is-expand"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Spring-%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%EF%BC%88%E4%B8%89%EF%BC%89%E2%80%93Resource%E3%80%81ResourceLoader%E5%92%8C%E5%AE%B9%E5%99%A8%E4%B9%8B%E9%97%B4%E7%9A%84%E5%85%B3%E7%B3%BB"><span class="toc-number">1.</span> <span class="toc-text">Spring 源码分析（三）–Resource、ResourceLoader和容器之间的关系</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Resource%E6%8E%A5%E5%8F%A3%E4%BD%93%E7%B3%BB"><span class="toc-number">1.1.</span> <span class="toc-text">Resource接口体系</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%B5%84%E6%BA%90%E6%8F%8F%E8%BF%B0%E7%9A%84%E9%A1%B6%E7%BA%A7%E6%8E%A5%E5%8F%A3%E2%80%94%E2%80%94Resource%E6%8E%A5%E5%8F%A3"><span class="toc-number">1.1.0.1.</span> <span class="toc-text">资源描述的顶级接口——Resource接口</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%8F%AF%E5%86%99%E7%9A%84%E8%B5%84%E6%BA%90%E6%93%8D%E4%BD%9C%E6%8E%A5%E5%8F%A3%E2%80%94%E2%80%94WritableResource%E6%8E%A5%E5%8F%A3"><span class="toc-number">1.1.0.2.</span> <span class="toc-text">可写的资源操作接口——WritableResource接口</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%8A%BD%E8%B1%A1%E5%85%AC%E5%85%B1%E5%AE%9E%E7%8E%B0%E7%B1%BB%E2%80%94%E2%80%94AbstractResource%E6%8A%BD%E8%B1%A1%E7%B1%BB"><span class="toc-number">1.1.0.3.</span> <span class="toc-text">抽象公共实现类——AbstractResource抽象类</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%85%B7%E4%BD%93%E5%AE%9E%E7%8E%B0%E7%9A%84%E8%B5%84%E6%BA%90%E7%B1%BB%E5%9E%8B%E2%80%94%E2%80%94UrlResource%E3%80%81FileSystemResource%E3%80%81ClassPathResource%E5%92%8CServletContextResource%E3%80%82"><span class="toc-number">1.1.0.4.</span> <span class="toc-text">具体实现的资源类型——UrlResource、FileSystemResource、ClassPathResource和ServletContextResource。</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%A4%84%E7%90%86%E8%B5%84%E6%BA%90%E7%BC%96%E7%A0%81%E7%9A%84%E5%AE%9E%E7%8E%B0%E7%B1%BB%E2%80%94%E2%80%94EncodedResource%E7%B1%BB"><span class="toc-number">1.1.0.5.</span> <span class="toc-text">处理资源编码的实现类——EncodedResource类</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#ResourceLoader%E6%8E%A5%E5%8F%A3%E4%BD%93%E7%B3%BB"><span class="toc-number">1.2.</span> <span class="toc-text">ResourceLoader接口体系</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%B5%84%E6%BA%90%E8%8E%B7%E5%8F%96%E7%AD%96%E7%95%A5%E7%9A%84%E9%A1%B6%E7%BA%A7%E6%8E%A5%E5%8F%A3%E2%80%94%E2%80%94ResourceLoader%E6%8E%A5%E5%8F%A3"><span class="toc-number">1.2.0.1.</span> <span class="toc-text">资源获取策略的顶级接口——ResourceLoader接口</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ResourceLoader%E6%8E%A5%E5%8F%A3%E7%9A%84%E9%BB%98%E8%AE%A4%E5%AE%9E%E7%8E%B0%E7%B1%BB%E2%80%94%E2%80%94DefaultResourceLoader%E7%B1%BB"><span class="toc-number">1.2.1.</span> <span class="toc-text">ResourceLoader接口的默认实现类——DefaultResourceLoader类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ResourceLoader%E6%8E%A5%E5%8F%A3%E7%9A%84%E5%A2%9E%E5%BC%BA%E2%80%94%E2%80%94ResourcePatternResolver%E6%8E%A5%E5%8F%A3"><span class="toc-number">1.2.2.</span> <span class="toc-text">ResourceLoader接口的增强——ResourcePatternResolver接口</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ResourcePatternResolver%E6%8E%A5%E5%8F%A3%E7%9A%84%E9%BB%98%E8%AE%A4%E5%AE%9E%E7%8E%B0%E7%B1%BB%E2%80%94%E2%80%94PathMatchingResourcePatternResolver%E7%B1%BB"><span class="toc-number">1.2.3.</span> <span class="toc-text">ResourcePatternResolver接口的默认实现类——PathMatchingResourcePatternResolver类</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%AB%98%E7%BA%A7%E5%AE%B9%E5%99%A8%E5%92%8CResourceLoader%E4%B9%8B%E9%97%B4%E5%BE%AE%E5%A6%99%E7%9A%84%E5%85%B3%E7%B3%BB%EF%BC%9A%E5%AE%9E%E7%8E%B0%E4%BA%86ResourceLoader%E6%8E%A5%E5%8F%A3%E7%9A%84ApplicationContext%E4%BD%93%E7%B3%BB"><span class="toc-number">1.2.3.1.</span> <span class="toc-text">高级容器和ResourceLoader之间微妙的关系：实现了ResourceLoader接口的ApplicationContext体系</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A6%82%E4%BD%95%E5%9C%A8-Spring-%E4%B8%AD%E8%8E%B7%E5%8F%96-Resource-%E5%92%8C-ResourceLoader"><span class="toc-number">1.3.</span> <span class="toc-text">如何在 Spring 中获取 Resource 和 ResourceLoader</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-number">1.4.</span> <span class="toc-text">总结</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%A1%A5%E5%85%85%EF%BC%9A"><span class="toc-number">1.5.</span> <span class="toc-text">补充：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0%EF%BC%9A"><span class="toc-number">1.6.</span> <span class="toc-text">参考文章：</span></a></li></ol></li></ol></div></div></div></div></main><footer id="footer" style="background-image: url('https://cdn.jsdelivr.net/gh/Fight-Qing/Image@main/index_img.jpg')"><div id="footer-wrap"><div class="copyright">&copy;2023 By smin</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script defer="defer" id="fluttering_ribbon" mobile="true" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-fluttering-ribbon.min.js"></script><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/activate-power-mode.min.js"></script><script>POWERMODE.colorful = true;
+POWERMODE.shake = true;
+POWERMODE.mobile = false;
+document.body.addEventListener('input', POWERMODE);
+</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div></body></html>
